@@ -54,18 +54,20 @@ def get_N_bands(L_DFT, fs, fraction=1, overlap_factor=0):
      return N_octaves
      
 def fractional_octave_filterbank(x, fs, L_DFT, L_block, L_feed, overlap_factor):
-    Pxx = spectrogram(x, fs=fs, window='hann', nperseg=L_block, noverlap=L_block-L_feed, mode='psd')
+    f, t, Pxx = spectrogram(x, fs=fs, window='hann', nperseg=L_block, noverlap=L_block-L_feed, mode='psd')
     
     N_octaves = get_N_bands(L_DFT, fs, fraction=1, overlap_factor=overlap_factor)
     
     retval = np.zeros(shape=(N_octaves, Pxx.shape[1]))
+    vec_f_center = np.zeros(N_octaves)
     
     for idx_octave in range(N_octaves):
         idx_lower, idx_center, idx_upper = get_bin_indices_for_octaves(idx_octave, L_DFT, fs, overlap_factor=overlap_factor)
         
-        retval[idx_octave,:] = np.sum(Pxx[idx_lower:idx_upper, :])
+        retval[idx_octave,:] = np.sum(Pxx[idx_lower:idx_upper, :], axis=0)
+        vec_f_center[idx_octave] = idx_center * fs / L_DFT
         
-    return retval
+    return retval, vec_f_center, t
      
     
 if __name__ == '__main__':
